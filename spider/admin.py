@@ -1,3 +1,8 @@
 from django.contrib import admin
 
-# Register your models here.
+from spider import models
+
+admin.site.register(models.Resource)
+admin.site.register(models.ItemRule)
+admin.site.register(models.Item)
+admin.site.register(models.LocalItem)
