@@ -1,9 +1,11 @@
+import os
+
 from datetime import datetime
-from hashlib import sha1
 
 from django.db import models
+from django.conf import settings
 
-from  utils import Extractor
+from utils import Extractor
 
 
 class Resource(models.Model):
@@ -11,96 +13,47 @@ class Resource(models.Model):
         content
     """
     url = models.CharField(max_length=256)
-    name = models.CharField(max_length=256, blank=True)
+    name = models.CharField(max_length=256, blank=True, null=True)
     active = models.BooleanField(default=True)
+    link_xpath = models.CharField(max_length=255)
+    content_xpath = models.CharField(max_length=255)
+    expand_rules = models.TextField(blank=True, null=True)
+    crawl_depth = models.PositiveIntegerField(default=1)
 
     def __unicode__(self):
         return 'Resource: %s' % self.name
 
+    def crawl(self, download=True):
+        extractor = Extractor(self.url, settings.CRAWL_ROOT)
+        all_links = extractor.extract_links(
+            xpath=self.link_xpath,
+            expand_rules=self.expand_rules.split('\n'),
+            depth=self.crawl_depth)
 
-class ItemRule(models.Model):
-    resource = models.ForeignKey(Resource, related_name='rules')
-    xpath = models.CharField(max_length=256)
-    parent = models.ForeignKey('ItemRule', related_name='rules',
-                               blank=True, null=True)
-    last_crawled = models.DateTimeField(blank=True, null=True)
-    data_type = models.ForeignKey('DataType')
+        print all_links
 
-    def __unicode__(self):
-        return 'Item Rule: %s' % self.xpath
-
-    def crawl(self):
-        """ Download content specified by this item rule
-        """
-        self.items.all().delete()
-
-        attribs = self.data_type.fields.replace(' ', '') or ''
-        attribs = [attr for attr in attribs.split(',') if attr]
-
-        extractor = Extractor(self.resource.url)
-        result, elements = extractor.extract(self.xpath, attribs)
-
-        # download full content or extract data parts
-        if self.data_type.is_body:
-            for res in result:
-                item = Item(rule=self)
-                item.save()
-                item.set_hashed_value()
-                root = elements[result.index(res)]
-                extractor.set_location(item.hashed_value)
-                extractor.download_content(root=root)
-                item.downloaded = True
-                item.save()
-        else:
-            for res in result:
-                item = Item(rule=self)
-                item.save()
-                for attr in attribs:
-                    new_attr = ItemAttribute(item=item, key=attr,
-                                             value=res.get(attr, ''))
-                    new_attr.save()
-                item.set_hashed_value()
-
-        self.last_crawled = datetime.now()
-        self.save()
+        if download:
+            for link in all_links:
+                link_url = link['url']
+                if LocalContent.objects.filter(url=link_url).count():
+                    print 'Bypass %s' % link_url
+                    continue
+                print 'Download %s' % link_url
+                location = datetime.now().strftime('%Y/%m/%d')
+                location = os.path.join(settings.CRAWL_ROOT, location)
+                sub_extr = Extractor(link_url, location)
+                local_path = sub_extr.extract_content(self.content_xpath)
+                content = LocalContent(url=link_url, resource=self,
+                                       local_path=local_path)
+                content.save()
 
 
-class Item(models.Model):
-    """ Store single item information of links, images, text,...
-    """
-    rule = models.ForeignKey('ItemRule', related_name='items')
-    hashed_value = models.CharField(max_length=256, blank=True,
-                                    default='', unique=True)
-    children = models.ManyToManyField('Item', blank=True, null=True)
-    downloaded = models.BooleanField(blank=True, default=False)
+class LocalContent(models.Model):
+    url = models.CharField(max_length=256)
+    resource = models.ForeignKey('Resource', related_name='content')
+    local_path = models.CharField(max_length=256)
+    created_time = models.DateTimeField(default=datetime.now,
+                                        blank=True, null=True)
 
     def __unicode__(self):
-        return 'Item of rule: %s' % str(self.rule)
-
-    def set_hashed_value(self):
-        if self.rule.data_type.is_body:
-            raw = self.rule.resource.url + str(self.pk)
-        else:
-            keys = [key[0] for key in self.attributes.values_list('key')]
-            values = [val[0] for val in self.attributes.values_list('value')]
-            keys.sort()
-            values.sort()
-            raw = ''.join(keys + values)
-        self.hashed_value = sha1(raw).hexdigest()
-        self.save()
-
-
-class ItemAttribute(models.Model):
-    item = models.ForeignKey('Item', related_name='attributes')
-    key = models.CharField(max_length=64)
-    value = models.TextField()
-
-
-class DataType(models.Model):
-    name = models.CharField(max_length=64)
-    fields = models.CharField(max_length=256, default='', blank=True)
-    is_body = models.BooleanField(blank=True)
-
-    def __unicode__(self):
-        return 'Data type: %s' % str(self.name)
-
+        return 'Local Content: %s' % self.url
