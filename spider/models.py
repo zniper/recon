@@ -16,21 +16,26 @@ class Resource(models.Model):
     name = models.CharField(max_length=256, blank=True, null=True)
     active = models.BooleanField(default=True)
     link_xpath = models.CharField(max_length=255)
-    content_xpath = models.CharField(max_length=255)
     expand_rules = models.TextField(blank=True, null=True)
     crawl_depth = models.PositiveIntegerField(default=1)
+    content_xpath = models.CharField(max_length=255)
+    meta_xpath = models.TextField(default='', blank=True)
+    refine_rules = models.TextField(default='', blank=True)
 
     def __unicode__(self):
         return 'Resource: %s' % self.name
 
     def crawl(self, download=True):
+        # Custom definitions
+        metapath = eval(self.meta_xpath)
+        rules = [item.strip() for item in self.refine_rules.split('\n')
+                 if item.strip()]
+
         extractor = Extractor(self.url, settings.CRAWL_ROOT)
         all_links = extractor.extract_links(
             xpath=self.link_xpath,
             expand_rules=self.expand_rules.split('\n'),
             depth=self.crawl_depth)
-
-        print all_links
 
         if download:
             for link in all_links:
@@ -42,7 +47,9 @@ class Resource(models.Model):
                 location = datetime.now().strftime('%Y/%m/%d')
                 location = os.path.join(settings.CRAWL_ROOT, location)
                 sub_extr = Extractor(link_url, location)
-                local_path = sub_extr.extract_content(self.content_xpath)
+                local_path = sub_extr.extract_content(self.content_xpath,
+                                                      metapath=metapath,
+                                                      custom_rules=rules)
                 content = LocalContent(url=link_url, resource=self,
                                        local_path=local_path)
                 content.save()

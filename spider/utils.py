@@ -1,12 +1,22 @@
 import requests
 import os
+import re
+import json
 
 from lxml import etree
 from urlparse import urljoin
+from shutil import rmtree
 from hashlib import sha1
 
 
 EXCLUDED_ATTRIBS = ('html')
+
+refine_rules = [
+    re.compile(r'\s+(class|id)=".*?"', re.IGNORECASE),
+    re.compile(r'<script.*?</script>', re.IGNORECASE),
+    re.compile(r'<a .*?>|</a>', re.IGNORECASE),
+    re.compile(r'<h\d.*</h\d>', re.IGNORECASE),
+    ]
 
 
 class Extractor(object):
@@ -57,46 +67,99 @@ class Extractor(object):
             path = urljoin(self.url, path)
         return path
 
-    def extract_content(self, xpath, with_image=True):
+    def extract_content(self, xpath, with_image=True, metapath=None,
+                        custom_rules=None):
         """ Download the whole content and images and save to local
+            * metapath = {
+                'key': xpath_value,
+                ...
+                }
         """
-        node = self.root.xpath(xpath)[0]
+
+        # Extract metadata
+        metadata = {
+            'hash': self.hash_value,
+            'url': self.url,
+            }
+        for key in metapath:
+            metadata[key] = self.root.xpath(metapath[key]) or ''
 
         # Create dir and download HTML content
         self.prepare_directory()
-        content = etree.tostring(node, pretty_print=True)
+        content = etree.tostring(self.root.xpath(xpath)[0], pretty_print=True)
+        content = self.refine_content(content, custom_rules=custom_rules)
+        node = etree.HTML(content)
 
         # Download images if required
+        image_alt = {}
         if with_image:
-            image_paths = node.xpath('//img/@src')
-            for ipath in image_paths:
+            images = node.xpath('//img')
+            for el in images:
+                ipath = el.xpath('@src')[0]
                 file_name = self.download_image(ipath)
                 content = content.replace(ipath, file_name)
+                image_alt[file_name] = ''.join(el.xpath('@alt'))
+        metadata['images'] = image_alt
 
-        # Finally, write to HTML file
-        with open(os.path.join(self.download_to, 'index.html'), 'wb') as hfile:
+        # Write to HTML file
+        with open(self.get_path('index.html'), 'wb') as hfile:
             hfile.write(content)
 
+        # Write manifest
+        with open(self.get_path('index.json'), 'w') as mfile:
+            mfile.write(json.dumps(metadata))
+
         return self.download_to
+
+    def get_path(self, file_name):
+        """ Return full path of file (include containing directory) """
+        return os.path.join(self.download_to,
+                            os.path.basename(file_name))
 
     def prepare_directory(self):
         """ Create local directories if not existing 
         """
         try:
-            os.makedirs(self.download_to)
+            rmtree(self.download_to)
         except OSError:
             pass
+        finally:
+            os.makedirs(self.download_to)
 
     def download_image(self, image_url):
         """ Download image from given url and save to common location 
         """
+        image_url = image_url.strip()
         image_name = image_url.split('/')[-1].split('?')[0]
-        try:
-            image = requests.get(image_url)
-        except requests.exceptions.MissingSchema:
+        if image_url.lower().find('http://') == -1:
             image_url = urljoin(self.url, image_url)
-            image = requests.get(image_url)
-        file_path = os.path.join(self.download_to, image_name)
+        lives = 3
+        while lives:
+            try:
+                image = requests.get(image_url)
+                lives -= 1
+            except requests.ConnectionError:
+                print 'Retry downloading file %s' % image_url
+        file_path = self.get_path(image_name)
         with open(file_path, 'wb') as imgfile:
             imgfile.write(image.content)
         return image_name
+
+    def refine_content(self, content, custom_rules=None):
+        """ rules should adapt formats:
+                [(action, target, value),...]j
+            actions:
+                'replace'
+        """
+        content = content.replace('\n', '').strip()
+
+        # Run custom rules first
+        for rule in custom_rules:
+            rg = re.compile(rule, re.IGNORECASE)
+            content = rg.sub('', content)
+
+        # then common rules...
+        for rg in refine_rules:
+            content = rg.sub('', content)
+
+        return content
