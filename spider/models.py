@@ -40,7 +40,9 @@ class Resource(models.Model):
 
         if download:
             # Get the black words
-            blacklist = self.black_words.words.split('\n')
+            blacklist = []
+            if self.black_words:
+                blacklist = self.black_words.words.split('\n')
 
             for link in all_links:
                 link_url = link['url']
