@@ -2,12 +2,15 @@ import requests
 import os
 import re
 import json
+import logging
 
 from lxml import etree
 from urlparse import urljoin
 from shutil import rmtree
 from hashlib import sha1
 
+
+logger = logging.getLogger('recon.spider')
 
 EXCLUDED_ATTRIBS = ('html')
 
@@ -78,7 +81,6 @@ class Extractor(object):
                 ...
                 }
         """
-
         # Extract metadata
         metadata = {
             'hash': self.hash_value,
@@ -95,10 +97,10 @@ class Extractor(object):
 
         # Check if this content will be fully downloaded or not
         stop_flag = False
-        low_content = content.lower()
+        norm_content = etree.tostring(self.root).lower()
         for word in blacklist:
-            if low_content.find(word) != -1:
-                print 'Bad word found: %s' % word
+            if norm_content.find(word) != -1:
+                logger.info('Bad word found (%s). Downloading stopped.' % word)
                 stop_flag = True
                 break
 
@@ -106,6 +108,7 @@ class Extractor(object):
         images_meta = []
         if with_image and not stop_flag:
             images = node.xpath('//img')
+            logger.info('Downloading %d found image(s)' % len(images))
             for el in images:
                 ipath = el.xpath('@src')[0]
                 file_name = self.download_image(ipath)
@@ -153,7 +156,7 @@ class Extractor(object):
                 image = requests.get(image_url)
                 lives -= 1
             except requests.ConnectionError:
-                print 'Retry downloading file %s' % image_url
+                logger.error('Retry downloading file %s' % image_url)
         file_path = self.get_path(image_name)
         with open(file_path, 'wb') as imgfile:
             imgfile.write(image.content)

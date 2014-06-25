@@ -79,6 +79,52 @@ USE_L10N = True
 USE_TZ = False
 
 
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'normal': {
+            'format': '%(levelname)s %(asctime)s %(message)s',
+        }
+    },
+    'handlers': {
+        'null': {
+            'level': 'DEBUG',
+            'class': 'django.utils.log.NullHandler',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/error.log',
+            'formatter': 'normal',
+        },
+        'crawl_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/crawl.log',
+            'formatter': 'normal',
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console', 'error_file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'recon.spider': {
+            'handlers': ['console', 'crawl_file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 

@@ -1,4 +1,5 @@
 import os
+import logging
 
 from datetime import datetime
 
@@ -6,6 +7,9 @@ from django.db import models
 from django.conf import settings
 
 from utils import Extractor
+
+
+logger = logging.getLogger('recon.spider')
 
 
 class Resource(models.Model):
@@ -27,6 +31,9 @@ class Resource(models.Model):
         return 'Resource: %s' % self.name
 
     def crawl(self, download=True):
+        logger.info('')
+        logger.info('Start crawling %s (%s)' % (self.name, self.url))
+
         # Custom definitions
         metapath = eval(self.meta_xpath)
         rules = [item.strip() for item in self.refine_rules.split('\n')
@@ -37,6 +44,7 @@ class Resource(models.Model):
             xpath=self.link_xpath,
             expand_rules=self.expand_rules.split('\n'),
             depth=self.crawl_depth)
+        logger.info('%d link(s) found' % len(all_links))
 
         if download:
             # Get the black words
@@ -47,9 +55,9 @@ class Resource(models.Model):
             for link in all_links:
                 link_url = link['url']
                 if LocalContent.objects.filter(url=link_url).count():
-                    print 'Bypass %s' % link_url
+                    logger.info('Bypass %s' % link_url)
                     continue
-                print 'Download %s' % link_url
+                logger.info('Download %s' % link_url)
                 location = datetime.now().strftime('%Y/%m/%d')
                 location = os.path.join(settings.CRAWL_ROOT, location)
                 sub_extr = Extractor(link_url, location)
