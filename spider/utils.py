@@ -97,7 +97,7 @@ class Extractor(object):
 
         # Check if this content will be fully downloaded or not
         stop_flag = False
-        norm_content = etree.tostring(self.root).lower()
+        norm_content = content.lower()
         for word in blacklist:
             if norm_content.find(word) != -1:
                 logger.info('Bad word found (%s). Downloading stopped.' % word)
