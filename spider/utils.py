@@ -11,6 +11,9 @@ from hashlib import sha1
 
 EXCLUDED_ATTRIBS = ('html')
 
+INDEX_HTML = 'index.html'
+INDEX_JSON = 'index.json'
+
 refine_rules = [
     re.compile(r'\s+(class|id)=".*?"', re.IGNORECASE),
     re.compile(r'<script.*?</script>', re.IGNORECASE),
@@ -68,7 +71,7 @@ class Extractor(object):
         return path
 
     def extract_content(self, xpath, with_image=True, metapath=None,
-                        custom_rules=None):
+                        custom_rules=None, blacklist=None):
         """ Download the whole content and images and save to local
             * metapath = {
                 'key': xpath_value,
@@ -90,23 +93,34 @@ class Extractor(object):
         content = self.refine_content(content, custom_rules=custom_rules)
         node = etree.HTML(content)
 
+        # Check if this content will be fully downloaded or not
+        stop_flag = False
+        low_content = content.lower()
+        for word in blacklist:
+            if low_content.find(word) != -1:
+                print 'Bad word found: %s' % word
+                stop_flag = True
+                break
+
         # Download images if required
-        image_alt = {}
-        if with_image:
+        images_meta = []
+        if with_image and not stop_flag:
             images = node.xpath('//img')
             for el in images:
                 ipath = el.xpath('@src')[0]
                 file_name = self.download_image(ipath)
                 content = content.replace(ipath, file_name)
-                image_alt[file_name] = ''.join(el.xpath('@alt'))
-        metadata['images'] = image_alt
+                meta = {'caption': ''.join(el.xpath('@alt'))}
+                images_meta.append((file_name, meta))
+        metadata['images'] = images_meta
 
         # Write to HTML file
-        with open(self.get_path('index.html'), 'wb') as hfile:
+        postfix = '.denied' if stop_flag else ''
+        with open(self.get_path(INDEX_HTML+postfix), 'wb') as hfile:
             hfile.write(content)
 
         # Write manifest
-        with open(self.get_path('index.json'), 'w') as mfile:
+        with open(self.get_path(INDEX_JSON+postfix), 'wb') as mfile:
             mfile.write(json.dumps(metadata))
 
         return self.download_to

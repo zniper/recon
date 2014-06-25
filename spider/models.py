@@ -21,6 +21,7 @@ class Resource(models.Model):
     content_xpath = models.CharField(max_length=255)
     meta_xpath = models.TextField(default='', blank=True)
     refine_rules = models.TextField(default='', blank=True)
+    black_words = models.ForeignKey('WordSet', blank=True, null=True)
 
     def __unicode__(self):
         return 'Resource: %s' % self.name
@@ -38,6 +39,9 @@ class Resource(models.Model):
             depth=self.crawl_depth)
 
         if download:
+            # Get the black words
+            blacklist = self.black_words.words.split('\n')
+
             for link in all_links:
                 link_url = link['url']
                 if LocalContent.objects.filter(url=link_url).count():
@@ -49,7 +53,8 @@ class Resource(models.Model):
                 sub_extr = Extractor(link_url, location)
                 local_path = sub_extr.extract_content(self.content_xpath,
                                                       metapath=metapath,
-                                                      custom_rules=rules)
+                                                      custom_rules=rules,
+                                                      blacklist=blacklist)
                 content = LocalContent(url=link_url, resource=self,
                                        local_path=local_path)
                 content.save()
@@ -64,3 +69,22 @@ class LocalContent(models.Model):
 
     def __unicode__(self):
         return 'Local Content: %s' % self.url
+
+
+class WordSet(models.Model):
+    """ Class words in to set for filtering purposes """
+    name = models.CharField(max_length=64)
+    words = models.TextField()
+
+    def save(self, *args, **kwargs):
+        """ Normalize all words in set """
+        good_list = []
+        for word in self.words.lower().split('\n'):
+            word = word.strip()
+            if word and word not in good_list:
+                good_list.append(word)
+        self.words = '\n'.join(good_list)
+        return super(WordSet, self).save(*args, **kwargs)
+
+    def __unicode__(self):
+        return 'Words: %s' % self.name
