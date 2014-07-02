@@ -108,7 +108,7 @@ class Extractor(object):
         images_meta = []
         if with_image and not stop_flag:
             images = node.xpath('//img')
-            logger.info('Downloading %d found image(s)' % len(images))
+            logger.info('Download %d found image(s)' % len(images))
             for el in images:
                 ipath = el.xpath('@src')[0]
                 file_name = self.download_image(ipath)

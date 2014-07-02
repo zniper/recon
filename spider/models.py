@@ -19,13 +19,8 @@ class Resource(models.Model):
     url = models.CharField(max_length=256)
     name = models.CharField(max_length=256, blank=True, null=True)
     active = models.BooleanField(default=True)
-    link_xpath = models.CharField(max_length=255)
     expand_rules = models.TextField(blank=True, null=True)
     crawl_depth = models.PositiveIntegerField(default=1)
-    content_xpath = models.CharField(max_length=255)
-    meta_xpath = models.TextField(default='', blank=True)
-    refine_rules = models.TextField(default='', blank=True)
-    black_words = models.ForeignKey('WordSet', blank=True, null=True)
 
     def __unicode__(self):
         return 'Resource: %s' % self.name
@@ -98,3 +93,26 @@ class WordSet(models.Model):
 
     def __unicode__(self):
         return 'Words: %s' % self.name
+
+
+class Item(models.Model):
+    """ Content object, or data unit of crawling process """
+    name = models.CharField(max_length=64)
+    resource = models.ForeignKey('Resource', related_name='items')
+    link_xpath = models.CharField(max_length=255)
+    content_xpath = models.CharField(max_length=255)
+    meta_xpath = models.TextField(default='', blank=True)
+    extra_xpath = models.TextField(default='', blank=True)
+    refine_rules = models.TextField(default='', blank=True)
+    content_type = models.ForeignKey('ContentType', blank=True, null=True)
+    black_words = models.ForeignKey('WordSet', blank=True, null=True)
+    active = models.BooleanField(default=True)
+
+    def __unicode__(self):
+        return 'Item: %s of %s' % (self.name, self.resource.name)
+
+
+class ContentType(models.Model):
+    """ Type assigned to the crawled content. This is not strictly required """
+    name = models.CharField(max_length=64)
+    description = models.TextField(blank=True, null=True)
