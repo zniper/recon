@@ -12,18 +12,26 @@ from utils import Extractor
 logger = logging.getLogger('recon.spider')
 
 
-class Resource(models.Model):
+class Source(models.Model):
     """ This could be a single site or part of a site which contains wanted
         content
     """
     url = models.CharField(max_length=256)
     name = models.CharField(max_length=256, blank=True, null=True)
-    active = models.BooleanField(default=True)
+    # Links section
+    link_xpath = models.CharField(max_length=255)
     expand_rules = models.TextField(blank=True, null=True)
     crawl_depth = models.PositiveIntegerField(default=1)
+    # Content section
+    content_xpath = models.CharField(max_length=255)
+    content_type = models.ForeignKey('ContentType', blank=True, null=True)
+    meta_xpath = models.TextField(default='', blank=True)
+    refine_rules = models.TextField(default='', blank=True)
+    black_words = models.ForeignKey('WordSet', blank=True, null=True)
+    active = models.BooleanField(default=True)
 
     def __unicode__(self):
-        return 'Resource: %s' % self.name
+        return 'Source: %s' % self.name
 
     def crawl(self, download=True):
         logger.info('')
@@ -60,14 +68,15 @@ class Resource(models.Model):
                                                       metapath=metapath,
                                                       custom_rules=rules,
                                                       blacklist=blacklist)
-                content = LocalContent(url=link_url, resource=self,
+                content = LocalContent(url=link_url, source=self,
                                        local_path=local_path)
                 content.save()
 
 
 class LocalContent(models.Model):
     url = models.CharField(max_length=256)
-    resource = models.ForeignKey('Resource', related_name='content')
+    source = models.ForeignKey('Source', related_name='content',
+                               blank=True, null=True)
     local_path = models.CharField(max_length=256)
     created_time = models.DateTimeField(default=datetime.now,
                                         blank=True, null=True)
@@ -93,23 +102,6 @@ class WordSet(models.Model):
 
     def __unicode__(self):
         return 'Words: %s' % self.name
-
-
-class Item(models.Model):
-    """ Content object, or data unit of crawling process """
-    name = models.CharField(max_length=64)
-    resource = models.ForeignKey('Resource', related_name='items')
-    link_xpath = models.CharField(max_length=255)
-    content_xpath = models.CharField(max_length=255)
-    meta_xpath = models.TextField(default='', blank=True)
-    extra_xpath = models.TextField(default='', blank=True)
-    refine_rules = models.TextField(default='', blank=True)
-    content_type = models.ForeignKey('ContentType', blank=True, null=True)
-    black_words = models.ForeignKey('WordSet', blank=True, null=True)
-    active = models.BooleanField(default=True)
-
-    def __unicode__(self):
-        return 'Item: %s of %s' % (self.name, self.resource.name)
 
 
 class ContentType(models.Model):
