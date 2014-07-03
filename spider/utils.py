@@ -74,7 +74,8 @@ class Extractor(object):
         return path
 
     def extract_content(self, xpath, with_image=True, metapath=None,
-                        custom_rules=None, blacklist=None):
+                        extrapath=None, custom_rules=None, blacklist=None,
+                        metadata=None):
         """ Download the whole content and images and save to local
             * metapath = {
                 'key': xpath_value,
@@ -82,10 +83,13 @@ class Extractor(object):
                 }
         """
         # Extract metadata
-        metadata = {
+        base_meta = {
             'hash': self.hash_value,
             'url': self.url,
             }
+        metadata = metadata or {}
+        metadata.update(base_meta)
+
         for key in metapath:
             metadata[key] = self.root.xpath(metapath[key]) or ''
 
@@ -111,11 +115,18 @@ class Extractor(object):
             logger.info('Download %d found image(s)' % len(images))
             for el in images:
                 ipath = el.xpath('@src')[0]
-                file_name = self.download_image(ipath)
+                file_name = self.download_file(ipath)
                 content = content.replace(ipath, file_name)
                 meta = {'caption': ''.join(el.xpath('@alt'))}
                 images_meta.append((file_name, meta))
         metadata['images'] = images_meta
+
+        # Download extra content
+        extra_files = []
+        for single_path in extrapath:
+            for url in self.root.xpath(single_path):
+                extra_files.append(self.download_file(url))
+        metadata['extras'] = extra_files
 
         # Write to HTML file
         postfix = '.denied' if stop_flag else ''
@@ -143,24 +154,24 @@ class Extractor(object):
         finally:
             os.makedirs(self.download_to)
 
-    def download_image(self, image_url):
+    def download_file(self, url):
         """ Download image from given url and save to common location 
         """
-        image_url = image_url.strip()
-        image_name = image_url.split('/')[-1].split('?')[0]
-        if image_url.lower().find('http://') == -1:
-            image_url = urljoin(self.url, image_url)
+        file_url = url.strip()
+        file_name = url.split('/')[-1].split('?')[0]
+        if file_url.lower().find('http://') == -1:
+            file_url = urljoin(self.url, file_url)
         lives = 3
         while lives:
             try:
-                image = requests.get(image_url)
+                response = requests.get(file_url)
                 lives -= 1
             except requests.ConnectionError:
-                logger.error('Retry downloading file %s' % image_url)
-        file_path = self.get_path(image_name)
-        with open(file_path, 'wb') as imgfile:
-            imgfile.write(image.content)
-        return image_name
+                logger.error('Retry downloading file %s' % file_url)
+        file_path = self.get_path(file_name)
+        with open(file_path, 'wb') as bfile:
+            bfile.write(response.content)
+        return file_name
 
     def refine_content(self, content, custom_rules=None):
         """ rules should adapt formats:

@@ -1,13 +1,12 @@
 from django.core.management.base import NoArgsCommand
 
-from spider.models import Resource
+from spider.models import Source
 
 
 class Command(NoArgsCommand):
     """ Crawl all active resources """
 
     def handle_noargs(self, **options):
-        resources = Resource.objects.filter(active=True)
-        for res in resources:
-            print 'Crawling %s' % res.name
-            res.crawl()
+        sources = Source.objects.filter(active=True)
+        for source in sources:
+            source.crawl()

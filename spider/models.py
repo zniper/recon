@@ -26,9 +26,11 @@ class Source(models.Model):
     content_xpath = models.CharField(max_length=255)
     content_type = models.ForeignKey('ContentType', blank=True, null=True)
     meta_xpath = models.TextField(default='', blank=True)
+    extra_xpath = models.TextField(default='', blank=True)
     refine_rules = models.TextField(default='', blank=True)
     black_words = models.ForeignKey('WordSet', blank=True, null=True)
     active = models.BooleanField(default=True)
+    download_image = models.BooleanField(default=True)
 
     def __unicode__(self):
         return 'Source: %s' % self.name
@@ -41,6 +43,8 @@ class Source(models.Model):
         metapath = eval(self.meta_xpath)
         rules = [item.strip() for item in self.refine_rules.split('\n')
                  if item.strip()]
+        extrapath = [item.strip() for item in self.extra_xpath.split('\n')
+                     if item.strip()]
 
         extractor = Extractor(self.url, settings.CRAWL_ROOT)
         all_links = extractor.extract_links(
@@ -50,11 +54,9 @@ class Source(models.Model):
         logger.info('%d link(s) found' % len(all_links))
 
         if download:
-            # Get the black words
             blacklist = []
             if self.black_words:
                 blacklist = self.black_words.words.split('\n')
-
             for link in all_links:
                 link_url = link['url']
                 if LocalContent.objects.filter(url=link_url).count():
@@ -64,13 +66,23 @@ class Source(models.Model):
                 location = datetime.now().strftime('%Y/%m/%d')
                 location = os.path.join(settings.CRAWL_ROOT, location)
                 sub_extr = Extractor(link_url, location)
-                local_path = sub_extr.extract_content(self.content_xpath,
-                                                      metapath=metapath,
-                                                      custom_rules=rules,
-                                                      blacklist=blacklist)
+                if self.content_type:
+                    base_meta = {'type': self.content_type.name}
+                else:
+                    base_meta = None
+                local_path = sub_extr.extract_content(
+                    self.content_xpath,
+                    with_image=self.download_image,
+                    metapath=metapath,
+                    extrapath=extrapath,
+                    custom_rules=rules,
+                    blacklist=blacklist,
+                    metadata=base_meta)
                 content = LocalContent(url=link_url, source=self,
                                        local_path=local_path)
                 content.save()
+        else:
+            return all_links
 
 
 class LocalContent(models.Model):
@@ -108,3 +120,6 @@ class ContentType(models.Model):
     """ Type assigned to the crawled content. This is not strictly required """
     name = models.CharField(max_length=64)
     description = models.TextField(blank=True, null=True)
+
+    def __unicode__(self):
+        return 'Type: %s' % self.name
