@@ -24,13 +24,13 @@ refine_rules = [
     re.compile(r'<h\d.*</h\d>', re.IGNORECASE),
     ]
 
-
 class Extractor(object):
     url = ''
     hash_value = ''
 
-    def __init__(self, url, base_dir=''):
+    def __init__(self, url, base_dir='', proxies=None):
         self.url = url
+        self.proxies = proxies
         self.base_dir = base_dir
         self.hash_value, self.root = self.parse_content(url)
         self.set_location(self.hash_value)
@@ -164,8 +164,8 @@ class Extractor(object):
         lives = 3
         while lives:
             try:
-                response = requests.get(file_url)
                 lives -= 1
+                response = requests.get(file_url, proxies=self.proxies)
             except requests.ConnectionError:
                 logger.error('Retry downloading file %s' % file_url)
         file_path = self.get_path(file_name)

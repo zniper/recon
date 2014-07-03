@@ -135,3 +135,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CRAWL_ROOT = os.path.join(BASE_DIR, 'crawl')
+
+PROXIES = {
+    'http': '111.26.21.148:80'
+    }

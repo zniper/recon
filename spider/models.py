@@ -58,29 +58,32 @@ class Source(models.Model):
             if self.black_words:
                 blacklist = self.black_words.words.split('\n')
             for link in all_links:
-                link_url = link['url']
-                if LocalContent.objects.filter(url=link_url).count():
-                    logger.info('Bypass %s' % link_url)
-                    continue
-                logger.info('Download %s' % link_url)
-                location = datetime.now().strftime('%Y/%m/%d')
-                location = os.path.join(settings.CRAWL_ROOT, location)
-                sub_extr = Extractor(link_url, location)
-                if self.content_type:
-                    base_meta = {'type': self.content_type.name}
-                else:
-                    base_meta = None
-                local_path = sub_extr.extract_content(
-                    self.content_xpath,
-                    with_image=self.download_image,
-                    metapath=metapath,
-                    extrapath=extrapath,
-                    custom_rules=rules,
-                    blacklist=blacklist,
-                    metadata=base_meta)
-                content = LocalContent(url=link_url, source=self,
-                                       local_path=local_path)
-                content.save()
+                try:
+                    link_url = link['url']
+                    if LocalContent.objects.filter(url=link_url).count():
+                        logger.info('Bypass %s' % link_url)
+                        continue
+                    logger.info('Download %s' % link_url)
+                    location = datetime.now().strftime('%Y/%m/%d')
+                    location = os.path.join(settings.CRAWL_ROOT, location)
+                    sub_extr = Extractor(link_url, location, settings.PROXIES)
+                    if self.content_type:
+                        base_meta = {'type': self.content_type.name}
+                    else:
+                        base_meta = None
+                    local_path = sub_extr.extract_content(
+                        self.content_xpath,
+                        with_image=self.download_image,
+                        metapath=metapath,
+                        extrapath=extrapath,
+                        custom_rules=rules,
+                        blacklist=blacklist,
+                        metadata=base_meta)
+                    content = LocalContent(url=link_url, source=self,
+                                        local_path=local_path)
+                    content.save()
+                except:
+                    logger.exception('Error when extracting %s' % link['url'])
         else:
             return all_links
 
