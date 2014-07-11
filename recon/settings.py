@@ -136,8 +136,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CRAWL_ROOT = os.path.join(BASE_DIR, 'crawl')
 
-PROXIES = {}
-
 try:
     from local_settings import *
 except ImportError:
