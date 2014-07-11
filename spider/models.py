@@ -126,3 +126,27 @@ class ContentType(models.Model):
 
     def __unicode__(self):
         return 'Type: %s' % self.name
+
+
+def migrate_to_scraper():
+    """ Move all current content to scraper models """
+    from scraper import models as smodels
+
+    for ws in WordSet.objects.all():
+        _dict = ws.__dict__
+        del _dict['_state']
+        new_ws = smodels.WordSet(**_dict)
+        new_ws.save()
+
+    for src in Source.objects.all():
+        _dict = src.__dict__
+        del _dict['_state']
+        new_src = smodels.Source(**_dict)
+        new_src.save()
+
+    for lco in LocalContent.objects.all():
+        _dict = lco.__dict__
+        del _dict['_state']
+        new_lco = smodels.LocalContent(**_dict)
+        new_lco.save()
+        

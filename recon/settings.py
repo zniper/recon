@@ -38,7 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'south',
     'rest_framework',
-    'spider',
+    'scraper',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -116,7 +116,7 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'recon.spider': {
+        'scraper': {
             'handlers': ['console', 'crawl_file'],
             'level': 'DEBUG',
             'propagate': True,
@@ -136,6 +136,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CRAWL_ROOT = os.path.join(BASE_DIR, 'crawl')
 
-PROXIES = {
-    'http': '111.26.21.148:80'
-    }
+PROXIES = {}
+
+try:
+    from local_settings import *
+except ImportError:
+    pass
