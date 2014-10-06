@@ -32,19 +32,20 @@ class DownloadContentView(View):
         cid = kwargs.get('pk', None)
         content = LocalContent.objects.get(pk=cid)
         zip_path = self.zip_content(content)
-        zfile = open(zip_path, 'rb')
-        response = HttpResponse(zfile.read(), content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="%s"' % \
-            os.path.basename(zip_path)
-        zfile.close()
+        with open(zip_path, 'rb') as zfile:
+            response = HttpResponse(
+                zfile.read(), content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename="%s"' % \
+                os.path.basename(zip_path)
         return response
 
     def zip_content(self, local_content):
         zip_path = local_content.local_path.rstrip('/') + '.zip'
-        with ZipFile(zip_path, 'w') as zfile:
-            for fn in os.listdir(local_content.local_path):
-                fp = os.path.join(local_content.local_path, fn)
-                zfile.write(fp, os.path.basename(fp))
+        zfile = ZipFile(zip_path, 'w')
+        for fn in os.listdir(local_content.local_path):
+            fp = os.path.join(local_content.local_path, fn)
+            zfile.write(fp, os.path.basename(fp))
+        zfile.close()
         return zfile.filename
 
 
