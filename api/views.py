@@ -15,7 +15,8 @@ class CheckResourceView(View):
 
     def get(self, *args, **kwargs):
         sid = kwargs.get('pk', None)
-        content = LocalContent.objects.filter(source__pk=sid).order_by('created_time')
+        content = LocalContent.objects.filter(source__pk=sid, state=0)
+        content = content.order_by('created_time')
         content_list = []
         for item in content:
             content_list.append({
@@ -54,5 +55,5 @@ class CleanContentView(View):
     def get(self, *args, **kwargs):
         cids = self.request.GET.get('id').split(',')
         for content in LocalContent.objects.filter(pk__in=cids):
-            content.delete()
+            content.remove_files()
         return HttpResponse('CLEANED: %s' % ', '.join(cids))
