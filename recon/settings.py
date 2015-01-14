@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'scraper',
     'api',
+    'djcelery',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -136,6 +137,10 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CRAWL_ROOT = os.path.join(BASE_DIR, 'crawl')
+
+# Celery
+import djcelery
+djcelery.setup_loader()
 
 try:
     from local_settings import *
