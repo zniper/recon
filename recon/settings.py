@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'scraper',
     'api',
     'djcelery',
+    'debug_toolbar',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -141,6 +142,7 @@ CRAWL_ROOT = os.path.join(BASE_DIR, 'crawl')
 # Celery
 import djcelery
 djcelery.setup_loader()
+
 
 try:
     from local_settings import *

@@ -8,7 +8,14 @@ from django.shortcuts import render
 from django.views.generic import View, TemplateView
 from django.conf import settings
 
+from rest_framework import generics, mixins
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
 from scraper.models import Source, LocalContent
+
+import models
+import serializers
 
 
 class CheckResourceView(View):
@@ -57,3 +64,51 @@ class CleanContentView(View):
         for content in LocalContent.objects.filter(pk__in=cids):
             content.remove_files()
         return HttpResponse('CLEANED: %s' % ', '.join(cids))
+
+
+# CRAWL REQUESTS
+
+class CrawlRequestListView(generics.ListCreateAPIView):
+    queryset = models.CrawlRequest.objects.all()
+    serializer_class = serializers.CrawlRequestSerializer
+
+
+class CrawlRequestDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = models.CrawlRequest.objects
+    serializer_class = serializers.CrawlRequestSerializer
+
+
+# SOURCES
+
+class SourceListView(generics.ListCreateAPIView):
+    queryset = Source.objects.all()
+    serializer_class = serializers.SourceSerializer
+
+
+class SourceDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Source.objects
+    serializer_class = serializers.SourceSerializer
+
+
+# CRAWL SCHEDULE
+
+class CrawlScheduleListView(generics.ListCreateAPIView):
+    queryset = models.CrawlSchedule.objects.all()
+    serializer_class = serializers.CrawlScheduleSerializer
+
+
+class CrawlScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = models.CrawlSchedule.objects
+    serializer_class = serializers.CrawlScheduleSerializer
+
+
+# CRAWL RECORDS
+
+class CrawlRecordListView(generics.ListCreateAPIView):
+    queryset = models.CrawlRecord.objects.all()
+    serializer_class = serializers.CrawlRecordSerializer
+
+
+class CrawlRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = models.CrawlRecord.objects
+    serializer_class = serializers.SourceSerializer
