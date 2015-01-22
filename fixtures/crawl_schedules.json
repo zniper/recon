@@ -1,0 +1,20 @@
+[
+{
+    "pk": 1, 
+    "model": "api.crawlschedule", 
+    "fields": {
+        "repeat": null, 
+        "effective": "2015-01-16T21:53:18", 
+        "expire": null
+    }
+},
+{
+    "pk": 2, 
+    "model": "api.crawlschedule", 
+    "fields": {
+        "repeat": 20, 
+        "effective": "2015-01-22T11:52:37", 
+        "expire": "2015-12-22T11:52:48"
+    }
+}
+]

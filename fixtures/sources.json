@@ -1,0 +1,107 @@
+[
+{
+    "pk": 1, 
+    "model": "scraper.source", 
+    "fields": {
+        "black_words": null, 
+        "name": "Avaxnews - Home", 
+        "url": "http://avaxnews.net", 
+        "refine_rules": "^<div.*?>\r\n<div class=\"tags\".*$\r\n<br/?>", 
+        "expand_rules": "//a[@class='next_page']/@href", 
+        "extra_xpath": "", 
+        "crawl_depth": 3, 
+        "meta_xpath": "{\r\n'title': '//meta[@name=\"title\"]/@content',\r\n'description': '//meta[@name=\"description\"]/@content',\r\n'keywords': '//meta[@name=\"keywords\"]/@content',\r\n}", 
+        "link_xpath": "//h1/span/a", 
+        "content_type": null, 
+        "proxy": null, 
+        "content_xpath": "//div[@class=\"news topic_item\"]", 
+        "active": false, 
+        "download_image": true, 
+        "user_agent": null
+    }
+},
+{
+    "pk": 2, 
+    "model": "scraper.source", 
+    "fields": {
+        "black_words": null, 
+        "name": "The Guardian - Eye witness", 
+        "url": "http://www.theguardian.com/world/series/eyewitness", 
+        "refine_rules": "", 
+        "expand_rules": "//div[@id='content']/ul[contains(@class,'pagination')]/li[@class='last']/a/@href", 
+        "extra_xpath": "//div[@id='content']/div[contains(@class, 'main-picture')]/a[@class='mask']/@href", 
+        "crawl_depth": 3, 
+        "meta_xpath": "{\r\n\"title\": \"//div[@id='main-article-info']/h1/text()\",\r\n'description': \"//div[@id='content']//div[@class='caption']/text()\",\r\n'credit': \"//div[@id='content']//div[@class='credit']/text()\",\r\n}", 
+        "link_xpath": "//div[@id='content']/ul[@id='auto-trail-block']//h3/a", 
+        "content_type": null, 
+        "proxy": 1, 
+        "content_xpath": "//div[@id='content']/div[contains(@class, 'main-picture')]/a", 
+        "active": false, 
+        "download_image": false, 
+        "user_agent": null
+    }
+},
+{
+    "pk": 3, 
+    "model": "scraper.source", 
+    "fields": {
+        "black_words": null, 
+        "name": "NatGeo - Proof", 
+        "url": "http://proof.nationalgeographic.com/", 
+        "refine_rules": "", 
+        "expand_rules": "", 
+        "extra_xpath": "", 
+        "crawl_depth": 1, 
+        "meta_xpath": "{\r\n\"title\": \"//h1[@class='entry-title']/text()\",\r\n'description': '//meta[@name=\"description\"]/@content',\r\n'keywords': '//meta[@name=\"keywords\"]/@content',\r\n}", 
+        "link_xpath": "//div[@class='entry-content']/h2/a", 
+        "content_type": null, 
+        "proxy": null, 
+        "content_xpath": "//div[@class=\"entry-content\"]/div[@class=\"entry-text\"]", 
+        "active": false, 
+        "download_image": true, 
+        "user_agent": null
+    }
+},
+{
+    "pk": 4, 
+    "model": "scraper.source", 
+    "fields": {
+        "black_words": null, 
+        "name": "Thien Dia - 189", 
+        "url": "http://thiendia.com/diendan/forumdisplay.php?f=189", 
+        "refine_rules": "<ul style=\"margin:0;\">.*?</ul>\r\n\\[/?hide\\]", 
+        "expand_rules": "(//div[@class=\"pagenav\"]//a[@rel=\"next\"])[1]/@href", 
+        "extra_xpath": "", 
+        "crawl_depth": 1, 
+        "meta_xpath": "{\r\n\"title\": '//*[starts-with(@id, \"td_post_\")]/div[1]/h2/text()',\r\n\"author\": '(//a[@class=\"bigusername\"])[1]/text()',\r\n}", 
+        "link_xpath": "//a[starts-with(@id, \"thread_title\")]", 
+        "content_type": null, 
+        "proxy": null, 
+        "content_xpath": "(//div[starts-with(@id, \"post_message_\")])[1]", 
+        "active": false, 
+        "download_image": true, 
+        "user_agent": null
+    }
+},
+{
+    "pk": 5, 
+    "model": "scraper.source", 
+    "fields": {
+        "black_words": null, 
+        "name": "TinhTe", 
+        "url": "https://www.tinhte.vn/forums/ios-tin-tuc-danh-gia.118/", 
+        "refine_rules": "", 
+        "expand_rules": "", 
+        "extra_xpath": "", 
+        "crawl_depth": 1, 
+        "meta_xpath": "{\"title\": \"//h1/text()\"}", 
+        "link_xpath": "/+//h3[@class=\"title\"]/a", 
+        "content_type": null, 
+        "proxy": null, 
+        "content_xpath": "//article", 
+        "active": true, 
+        "download_image": true, 
+        "user_agent": null
+    }
+}
+]

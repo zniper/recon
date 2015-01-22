@@ -1,0 +1,20 @@
+[
+{
+    "pk": 1, 
+    "model": "api.crawlrequest", 
+    "fields": {
+        "source": 5, 
+        "task": "", 
+        "schedule": 1
+    }
+},
+{
+    "pk": 2, 
+    "model": "api.crawlrequest", 
+    "fields": {
+        "source": 1, 
+        "task": "4444-3333-2222-1111", 
+        "schedule": 2
+    }
+}
+]
