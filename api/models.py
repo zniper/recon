@@ -7,6 +7,11 @@ class CrawlRequest(models.Model):
     # UID of processing task
     task = models.CharField(max_length=128, blank=True, null=True)
 
+    def delete(self, using=None):
+        self.source.delete()
+        self.schedule.delete()
+        super(CrawlRequest, self).delete(using)
+
 
 class CrawlSchedule(models.Model):
     """ Defines the schedule for a specific crawl action """
