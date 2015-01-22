@@ -65,3 +65,9 @@ class SourceDetailView(TestCase):
         self.assertEqual(source['id'], 3)
         for item in data.keys():
             self.assertEqual(data[item], source[item])
+
+    def test_delete(self):
+        res = self.client.delete(self.url)
+        self.assertEqual(res.status_code, 204)
+        res = self.client.get(self.url)
+        self.assertEqual(res.status_code, 404)
