@@ -8,8 +8,8 @@ class CrawlRequest(models.Model):
     task = models.CharField(max_length=128, blank=True, null=True)
 
     def delete(self, using=None):
-        self.source.delete()
-        self.schedule.delete()
+        #self.source.delete()
+        #self.schedule.delete()
         super(CrawlRequest, self).delete(using)
 
 

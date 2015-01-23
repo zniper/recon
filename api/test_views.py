@@ -5,9 +5,6 @@ from datetime import datetime, timedelta
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 
-from .models import CrawlRequest, CrawlSchedule
-from scraper.models import Source
-
 
 class SourceListViewTestCase(TestCase):
     fixtures = ['fixtures/sources.json']
@@ -87,14 +84,9 @@ class CrawlRequestListViewTestCase(TestCase):
         self.assertEqual(res.status_code, 200)
 
     def test_create_request(self):
-        schedule = CrawlSchedule.objects.create(
-            effective=datetime.now(),
-            repeat=1,
-            expire=datetime.now()+timedelta(2)
-        )
         data = {
             'source': 3,
-            'schedule': schedule.pk,
+            'schedule': 1,
         }
         res = self.client.post(self.url, data)
         self.assertEquals(res.status_code, 201)
@@ -133,3 +125,24 @@ class CrawlRequestDetailView(TestCase):
         self.assertEqual(res.status_code, 204)
         res = self.client.get(self.url)
         self.assertEqual(res.status_code, 404)
+
+
+class CrawlScheduleListViewTestCase(TestCase):
+    fixtures = ['fixtures/sources.json',
+                'fixtures/crawl_schedules.json']
+    url = reverse('schedule-list')
+
+    def test_index(self):
+        res = self.client.get(self.url)
+        self.assertEqual(res.status_code, 200)
+
+    def test_create_request(self):
+        data = {
+            'effective': datetime.now(),
+            'repeat': 1,
+            'expire': datetime.now()+timedelta(2)
+        }
+        res = self.client.post(self.url, data)
+        self.assertEquals(res.status_code, 201)
+        schedule = json.loads(res.content)
+        self.assertGreater(schedule['id'], 0)
