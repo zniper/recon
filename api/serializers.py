@@ -1,14 +1,24 @@
 from rest_framework import serializers
 from scraper.models import Source
 
-from models import CrawlRequest, CrawlSchedule, CrawlRecord
+from repository import models as repo_models
 
 
-class CrawlRequestSerializer(serializers.ModelSerializer):
+class RequestSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CrawlRequest
+        model = repo_models.Request
 
 
+class ScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = repo_models.Schedule
+
+
+class RecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = repo_models.Record
+
+"""
 class CombinedCrawlRequestSerializer(serializers.Serializer):
     pk = serializers.IntegerField(read_only=True)
     task = serializers.CharField(required=False, allow_blank=True,
@@ -33,11 +43,8 @@ class SourceSerializer(serializers.ModelSerializer):
         model = Source
 
 
-class CrawlScheduleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CrawlSchedule
-
-
 class CrawlRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = CrawlRecord
+
+"""

@@ -13,8 +13,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from scraper.models import Source, LocalContent
+from repository import models as repo_models
 
-import models
 import serializers
 
 
@@ -68,47 +68,35 @@ class CleanContentView(View):
 
 # CRAWL REQUESTS
 
-class CrawlRequestListView(generics.ListCreateAPIView):
-    queryset = models.CrawlRequest.objects.all()
-    serializer_class = serializers.CrawlRequestSerializer
+class RequestListView(generics.ListCreateAPIView):
+    queryset = repo_models.Request.objects.all()
+    serializer_class = serializers.RequestSerializer
 
 
-class CrawlRequestDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = models.CrawlRequest.objects
-    serializer_class = serializers.CrawlRequestSerializer
-
-
-# SOURCES
-
-class SourceListView(generics.ListCreateAPIView):
-    queryset = Source.objects.all()
-    serializer_class = serializers.SourceSerializer
-
-
-class SourceDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Source.objects
-    serializer_class = serializers.SourceSerializer
+class RequestDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = repo_models.Request.objects
+    serializer_class = serializers.RequestSerializer
 
 
 # CRAWL SCHEDULE
 
-class CrawlScheduleListView(generics.ListCreateAPIView):
-    queryset = models.CrawlSchedule.objects.all()
-    serializer_class = serializers.CrawlScheduleSerializer
+class ScheduleListView(generics.ListCreateAPIView):
+    queryset = repo_models.Schedule.objects.all()
+    serializer_class = serializers.ScheduleSerializer
 
 
-class CrawlScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = models.CrawlSchedule.objects
-    serializer_class = serializers.CrawlScheduleSerializer
+class ScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = repo_models.Schedule.objects
+    serializer_class = serializers.ScheduleSerializer
 
 
 # CRAWL RECORDS
 
-class CrawlRecordListView(generics.ListCreateAPIView):
-    queryset = models.CrawlRecord.objects.all()
-    serializer_class = serializers.CrawlRecordSerializer
+class RecordListView(generics.ListCreateAPIView):
+    queryset = repo_models.Record.objects.all()
+    serializer_class = serializers.RecordSerializer
 
 
-class CrawlRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = models.CrawlRecord.objects
-    serializer_class = serializers.SourceSerializer
+class RecordDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = repo_models.Record.objects
+    serializer_class = serializers.RecordSerializer

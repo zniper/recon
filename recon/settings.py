@@ -37,10 +37,13 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'south',
+    'jsonfield',
     'rest_framework',
     'scraper',
     'api',
+    'repository',
     'djcelery',
+    'storages',
     'debug_toolbar',
 )
 
@@ -136,8 +139,7 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-CRAWL_ROOT = os.path.join(BASE_DIR, 'crawl')
+CRAWL_ROOT = 'crawl'
 
 # Celery
 import djcelery
